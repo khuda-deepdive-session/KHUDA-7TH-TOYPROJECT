@@ -72,7 +72,7 @@ class UserLogDB(Base):
     google_id   = Column(String, ForeignKey("users.google_id"))
     question_id = Column(Integer, ForeignKey("questions.question_id"))
     correct     = Column(Boolean)
-    created_At  = Column(DateTime(timezone=True), server_default=func.now())
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
 
     log_owner = relationship("UserDB", back_populates="log_items")
     log_qid_owner = relationship("QuestionDB", back_populates="log_question_id")

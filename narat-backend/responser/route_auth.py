@@ -78,3 +78,32 @@ async def create(item: Verify, db: Session = Depends(get_db)):
             "display_name": data.session_owner.display_name,
             "study_level": data.session_owner.study_level
         })
+
+@router.post('/logout')
+async def logout(item: Verify, db: Session = Depends(get_db)):
+    data = db.query(models.SessionDB).filter(models.SessionDB.session_id == item.session_token).first()
+    if data is None:
+        raise HTTPException(status_code=400, detail="Invalid session token")
+    else:
+        db.delete(data)
+        db.commit()
+        return JSONResponse({
+            "success": True
+        })
+
+@router.post('/test_session_create')
+async def test_session_create(item: Google, db: Session = Depends(get_db)):
+    if os.environ.get('TEST_SESSION_TOKEN') != item.access_token:
+        raise HTTPException(status_code=400, detail="Invalid environment")
+    data = db.query(models.UserDB).filter(models.UserDB.email == "test@test.com").first()
+    if data is not None:
+        session = models.SessionDB(session_id=str(uuid4()), google_id=data.google_id)
+        db.add(session)
+        db.commit()
+        return JSONResponse({
+            "session_token": session.session_id,
+            "display_name": data.display_name,
+            "study_level" : data.study_level
+        })
+    else:
+        raise HTTPException(status_code=400, detail="User not found")
