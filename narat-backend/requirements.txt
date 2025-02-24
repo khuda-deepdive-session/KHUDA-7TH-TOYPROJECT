@@ -1,0 +1,10 @@
+fastapi
+pydantic
+uvicorn
+uuid
+dotenv
+google-auth
+sqlalchemy
+psycopg2-binary
+pandas
+requests
