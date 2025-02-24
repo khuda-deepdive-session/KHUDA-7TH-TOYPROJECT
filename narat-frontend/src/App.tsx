@@ -1,102 +1,97 @@
 //src/App.tsx
-import styled from 'styled-components';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import { theme } from './styles/theme';
-import { Login, Profile, Study, Statistics } from './routes';
-import { Loading } from './components/common/Loading';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthContext } from './context/AuthContext';
+import { verifySession } from './api/auth';
 
-const Container = styled.div`
-  min-height: 100vh;
-  padding: ${theme.spacing.xl};
-  background-color: ${theme.colors.background.primary};
-`;
-const WelcomeSection = styled.section`
-  text-align: center;
-  margin-top: ${theme.spacing['3xl']};
-`;
+// 페이지 컴포넌트 임포트
+import LoginPage from './routes/auth/login';
+import ProfilePage from './routes/auth/profile';
+import StudyPage from './routes/study';
+import StatisticsPage from './routes/statistics';
+// 추천 페이지 
+import Loading from './components/common/Loading';
 
-const Title = styled.h1`
-  font-size: ${theme.typography.fontSize['4xl']};
-  font-weight: ${theme.typography.fontWeight.bold};
-  color: ${theme.colors.primary.deep};
-  margin-bottom: ${theme.spacing.lg};
-`;
+const App: React.FC = () => {
+  const [user, setUser] = useState<{
+    displayName: string;
+    studyLevel: number;
+    isAuthenticated: boolean;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
 
-const Subtitle = styled.p`
-  font-size: ${theme.typography.fontSize.xl};
-  color: ${theme.colors.mono.gray};
-  margin-bottom: ${theme.spacing['2xl']};
-`;
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
+  useEffect(() => {
+    const checkAuth = async () => {
+      const sessionToken = localStorage.getItem('session_token');
+      
+      if (sessionToken) {
+        try {
+          const response = await verifySession(sessionToken);
+          
+          if (response.is_valid) {
+            setUser({
+              displayName: response.display_name,
+              studyLevel: response.study_level,
+              isAuthenticated: true
+            });
+          } else {
+            // 세션이 유효하지 않으면 토큰 제거
+            localStorage.removeItem('session_token');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Failed to verify session:', error);
+          localStorage.removeItem('session_token');
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+      
+      setLoading(false);
+    };
+    
+    checkAuth();
+  }, []);
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  return isAuthenticated ? (
-    children
-  ) : (
-    <Navigate to="/" state={{ from: location }} replace />
-  );
-};
-
-function App() {
-  const { isAuthenticated, displayName, isLoading } = useAuth();
-
-  if (isLoading) {
+  if (loading) {
     return <Loading />;
   }
 
   return (
-    <Container>
-      <WelcomeSection>
-        <Title>
-          {isAuthenticated 
-            ? `안녕하세요, ${displayName || '사용자'}님!`
-            : '나랏말싸미에 오신 것을 환영합니다'}
-        </Title>
-        <Subtitle>
-          {isAuthenticated
-            ? '오늘도 즐거운 한글 학습 되세요'
-            : '우리말을 바르게 쓰는 즐거움을 경험하세요'}
-        </Subtitle>
-      </WelcomeSection>
-      <Routes>
-        <Route 
-          path="/" 
-          element={isAuthenticated ? <Navigate to="/study" replace /> : <Login />} 
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/study"
-          element={
-            <ProtectedRoute>
-              <Study />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/statistics"
-          element={
-            <ProtectedRoute>
-              <Statistics />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Container>
+    <AuthContext.Provider value={{ user, setUser }}>
+      <Router>
+        <Routes>
+          {/* 공개 라우트 */}
+          <Route path="/login" element={
+            user?.isAuthenticated ? <Navigate to="/study" /> : <LoginPage />
+          } />
+          
+          {/* 보호된 라우트 */}
+          <Route path="/study" element={
+            user?.isAuthenticated ? <StudyPage /> : <Navigate to="/login" />
+          } />
+          <Route path="/statistics" element={
+            user?.isAuthenticated ? <StatisticsPage /> : <Navigate to="/login" />
+          } />
+          <Route path="/profile" element={
+            user?.isAuthenticated ? <ProfilePage /> : <Navigate to="/login" />
+          } />
+          
+          {/* 추천 페이지 라우트 */}
+          <Route path="/recommendations" element={
+            user?.isAuthenticated ? <RecommendationsPage /> : <Navigate to="/login" />
+          } />
+          
+          {/* 기본 리다이렉트 */}
+          <Route path="/" element={
+            user?.isAuthenticated ? <Navigate to="/study" /> : <Navigate to="/login" />
+          } />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </AuthContext.Provider>
   );
-}
+};
 
 export default App;

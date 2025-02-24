@@ -1,72 +1,63 @@
 // src/api/auth.ts
-import { AxiosError } from 'axios';
-import apiClient from '@/utils/api';
-import { User, AuthCredentials, ProfileUpdateData } from '@/types/auth';
+import api from '@/utils/api';
 
-interface AuthResponse {
+// 인증 관련 응답 타입
+export interface AuthResponse {
   session_token: string;
   display_name: string;
-  study_level: string;
-  user?: User;
+  study_level: number;
 }
 
-interface VerifyResponse {
-  is_valid: boolean;
-  google_id: string;
-  email: string;
-  display_name: string;
-  study_level: string;
-  created_at: string;
-  last_login: string;
+interface GoogleLoginParams {
+  access_token: string;
 }
 
-interface ProfileResponse {
-  display_name: string;
-  user: User;
+interface VerifySessionParams {
+  session_token: string;
 }
 
-export const loginWithGoogle = async (accessToken: string): Promise<AuthResponse> => {
-  try {
-    const { data } = await apiClient.post<AuthResponse>('/api/auth/google', {
-      access_token: accessToken
-    });
-    return data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || '로그인에 실패했습니다.');
-    }
-    throw error;
-  }
+interface LogoutParams {
+  session_token: string;
+}
+
+interface UpdateProfileParams {
+  session_token: string;
+  display_name?: string;
+  gender?: boolean;
+  age?: number;
+}
+
+// Google 로그인
+export const loginWithGoogle = async (params: GoogleLoginParams): Promise<AuthResponse> => {
+  return await api.post('/api/auth/google', params);
 };
 
-export const verifySession = async (sessionToken: string): Promise<VerifyResponse> => {
-  try {
-    const { data } = await apiClient.post<VerifyResponse>('/api/auth/verify', {
-      session_token: sessionToken
-    });
-    return data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || '세션 검증에 실패했습니다.');
-    }
-    throw error;
-  }
+// 세션 검증
+export const verifySession = async (sessionToken: string) => {
+  const params: VerifySessionParams = { session_token: sessionToken };
+  return await api.post('/api/auth/verify', params);
 };
 
-export const updateProfile = async (
-  sessionToken: string, 
-  profileData: ProfileUpdateData
-): Promise<ProfileResponse> => {
-  try {
-    const { data } = await apiClient.post<ProfileResponse>('/api/auth/detail', {
-      session_token: sessionToken,
-      ...profileData
-    });
-    return data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      throw new Error(error.response?.data?.message || '프로필 업데이트에 실패했습니다.');
-    }
-    throw error;
-  }
+
+// 로그아웃
+export const logout = async (params: LogoutParams) => {
+  return await api.post('/api/auth/logout', params);
+};
+
+// 테스트용 세션 생성 (개발 환경에서만 사용)
+export const createTestSession = async (params: GoogleLoginParams) => {
+  return await api.post('/api/auth/test_session_create', params);
+};
+
+// 사용자 프로필 업데이트
+export const updateProfile = async (params: UpdateProfileParams) => {
+  return await api.post('/api/auth/detail', params);
+};
+
+export default {
+  loginWithGoogle,
+  verifySession,
+  logout,
+  createTestSession,
+  updateProfile,
 };

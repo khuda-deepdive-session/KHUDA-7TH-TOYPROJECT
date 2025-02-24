@@ -1,17 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
+  --primary-light: #6366F1;
+  --primary-main: #4F46E5;
+  --primary-dark: #4338CA;
+  --secondary-light: #34D399;
+  --secondary-main: #10B981;
+  --secondary-dark: #059669;
+  --background-light: #F9FAFB;
+  --background-main: #F3F4F6;
+  --background-dark: #E5E7EB;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-disabled: #9CA3AF;
+  --error-main: #EF4444;
+  --success-main: #10B981;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--background-light);
+  color: var(--text-primary);
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+#root {
+  width: 100%;
+  margin: 0 auto;
+}
+
+@layer components {
+  .container {
+    @apply px-4 mx-auto max-w-screen-xl;
   }
-  
-  body {
-    margin: 0;
-    min-width: 320px;
-    min-height: 100vh;
-  }
-  
-  #root {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-  }
+}

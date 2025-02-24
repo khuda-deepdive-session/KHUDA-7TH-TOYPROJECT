@@ -2,15 +2,41 @@ import type { Config } from "tailwindcss";
 
 export default {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: {
+          light: 'var(--primary-light)',
+          DEFAULT: 'var(--primary-main)',
+          dark: 'var(--primary-dark)',
+        },
+        secondary: {
+          light: 'var(--secondary-light)',
+          DEFAULT: 'var(--secondary-main)',
+          dark: 'var(--secondary-dark)',
+        },
+        background: {
+          light: 'var(--background-light)',
+          DEFAULT: 'var(--background-main)',
+          dark: 'var(--background-dark)',
+        },
+        text: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          disabled: 'var(--text-disabled)',
+        },
+        error: {
+          DEFAULT: 'var(--error-main)',
+        },
+        success: {
+          DEFAULT: 'var(--success-main)',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'Avenir', 'Helvetica', 'Arial', 'sans-serif'],
       },
     },
   },
