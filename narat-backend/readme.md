@@ -52,5 +52,5 @@ src/
 ### /api/states
 | Endpoint | Method | Description | Request | Response |
 | --- | --- | --- | --- | --- |
-| `/api/stats/user` | POST | 사용자 통계 | `{ session_token(str) }` | `{ study_states=[{created_at(datetime), correct(int: 1 is wrong, 0 is correct)}] }` |
-| `/api/stats/questions/{id}` | GET | 문제별 통계 | - | `{ question_stats=[{question_id(int), created_at(datetime), correct(int: 1 is wrong, 0 is correct)}] }` |
+| `/api/stats/user` | POST | 사용자 통계 | `{ session_token(str) }` | `{ study_states=[item{question_id(int), created_at(datetime), correct(int: 1 is wrong, 0 is correct)}] }` |
+| `/api/stats/questions/{id}` | GET | 문제별 통계 | - | `{ question_stats=[item{created_at(datetime), correct(int: 1 is wrong, 0 is correct)}] }` |

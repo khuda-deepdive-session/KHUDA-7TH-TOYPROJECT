@@ -72,7 +72,7 @@ async def root(item: RecommendationsSuccessForm, db: Session = Depends(get_db)):
                 "user_id": row.google_id,
                 "item_id": row.question_id,
                 "rating":  (0 if row.correct else 1),
-                "timestamp": row.delay
+                "timestamp": int(row.created_at.timestamp())
             })
         data_questions = requests.post(f"{GET_URL}/api/recommendation/subsequent", json={"items": log_data_query})
     
