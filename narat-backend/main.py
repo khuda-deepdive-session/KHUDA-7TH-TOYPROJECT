@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-from responser import route_auth
+from responser import route_auth, route_questions, route_recommendations, route_states, route_study
 from pydantic import BaseModel
 from database import engine
 import models
@@ -10,10 +10,10 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.include_router(route_auth.router)
-# app.include_router(route_questions.router)
-# app.include_router(route_study.router)
-# app.include_router(route_recommendations.router)
-# app.include_router(route_states.router)
+app.include_router(route_questions.router)
+app.include_router(route_study.router)
+app.include_router(route_recommendations.router)
+app.include_router(route_states.router)
 
 @app.get("/")
 async def read_root():

@@ -5,7 +5,7 @@ import os
 import models
 from database import engine
 
-def append_csv_to_table(db_url, table_name, csv_path, dtypes=None):
+def append_csv_to_table(db_url, table_name, csv_path):
     
     # 데이터베이스 엔진 생성
     engine = create_engine(db_url)
@@ -21,7 +21,14 @@ def append_csv_to_table(db_url, table_name, csv_path, dtypes=None):
     
     # CSV 파일 읽기
     print(f"CSV 파일 '{csv_path}' 읽는 중...")
-    df = pd.read_csv(csv_path)
+    df = pd.read_csv(csv_path, encoding='utf-8', 
+                     dtype={
+                         "question_id": 'int',
+                         "wrong_ans": 'str',
+                         "correct_ans": 'str',
+                         "question": 'str',
+                         "explanation": 'str'
+                     })
     
     # CSV 파일의 컬럼과 테이블의 컬럼 비교
     missing_columns = set(columns) - set(df.columns)
@@ -39,6 +46,7 @@ def append_csv_to_table(db_url, table_name, csv_path, dtypes=None):
         df = df[columns]
     
     for col in df.columns:
+        print(df[col].dtype)
         if df[col].dtype == 'object':
             df[col] = df[col].str.replace('"', "").str.strip()
     
@@ -46,7 +54,6 @@ def append_csv_to_table(db_url, table_name, csv_path, dtypes=None):
     with engine.connect() as conn:
         conn.execute(text(f"DELETE FROM {table_name}"))
         conn.commit()
-        print(conn.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar())
     
     # 데이터 추가
     print(f"테이블 '{table_name}'에 데이터 추가 중...")
@@ -55,7 +62,6 @@ def append_csv_to_table(db_url, table_name, csv_path, dtypes=None):
         con=engine,
         if_exists='append',
         index=False,
-        dtype=dtypes
     )
     
     # 추가된 데이터 확인

@@ -28,7 +28,11 @@ def create_database(db_name, user, password, host='localhost', port='5432'):
         cursor.execute(sql.SQL("CREATE DATABASE {}".format(db_name)))
         print(f"데이터베이스 '{db_name}'가 생성되었습니다.")
     else:
-        print(f"데이터베이스 '{db_name}'가 이미 존재합니다.")
+        print(f"데이터베이스 '{db_name}'가 이미 존재합니다. 정말로 초기화하시겠습니까? (Y/n):")
+        if input() == 'Y':
+            cursor.execute(sql.SQL("DROP DATABASE {}".format(db_name)))
+            cursor.execute(sql.SQL("CREATE DATABASE {}".format(db_name)))
+
     
     cursor.close()
     conn.close()
