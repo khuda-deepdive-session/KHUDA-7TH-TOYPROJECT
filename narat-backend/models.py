@@ -26,6 +26,8 @@ class RecommendationsDB(Base):
 
     rec_id     = Column(String, primary_key=True, index=True)
     google_id  = Column(String, ForeignKey("users.google_id"))
+    rec_status = Column(Boolean, default=False)
+    rec_type   = Column(Integer)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     rec_owner = relationship("UserDB", back_populates="rec_items")
@@ -70,7 +72,7 @@ class UserLogDB(Base):
     google_id   = Column(String, ForeignKey("users.google_id"))
     question_id = Column(Integer, ForeignKey("questions.question_id"))
     correct     = Column(Boolean)
-    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+    delay       = Column(Integer)
 
     log_owner = relationship("UserDB", back_populates="log_items")
     log_qid_owner = relationship("QuestionDB", back_populates="log_question_id")
