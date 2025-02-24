@@ -49,42 +49,61 @@ async def root(item: RecommendationsSuccessForm, db: Session = Depends(get_db)):
     data = db.query(models.RecommendationsDB).filter(models.RecommendationsDB.rec_id == item.rec_id).first()
     if data is None:
         raise HTTPException(status_code=404, detail="Recommendation not found")
-    if data.success:
-        raise HTTPException(status_code=400, detail="Recommendation already completed")
     
-    data.success = True
-    db.commit()
-
-    log_data = db.query(models.LogDB).filter(models.LogDB.google_id == data.google_id).all()
-    log_data_query = []
-
-    if data.rec_type == 1:
-        for row in log_data:
-            log_data_query.append({
-                "item_id": row.question_id,
-                "rating":  (0 if row.correct else 1),
+    if data.success:
+        result_data = []
+        data_rec = db.query(models.RecommendationQuestionsDB).filter(models.RecommendationQuestionsDB.rec_id == item.rec_id).all().order_by(models.RecommendationQuestionsDB.order)
+        if len(data_rec) == 0:
+            raise HTTPException(status_code=404, detail="Recommendation questions is empty")
+        for row in data_rec:
+            data_question = db.query(models.QuestionDB).filter(models.QuestionDB.question_id == row.question_id).first()
+            result_data.append({
+                "question_id": row.question_id,
+                "question": data_question.question,
+                "answer": data_question.answer,
+                "explanation": data_question.explanation,
+                "created_at": data_question.created
             })
-        data_questions = requests.post(f"{GET_URL}/api/recommendation/initial", json={"items": log_data_query})
 
     else:
-        for row in log_data:
-            log_data_query.append({
-                "user_id": row.google_id,
-                "item_id": row.question_id,
-                "rating":  (0 if row.correct else 1),
-                "timestamp": int(row.created_at.timestamp())
+        data.success = True
+        db.commit()
+
+        log_data = db.query(models.LogDB).filter(models.LogDB.google_id == data.google_id).all().order_by(models.LogDB.created_at.desc()).limit(30)
+        log_data_query = []
+
+        if data.rec_type == 1:
+            for row in log_data:
+                log_data_query.append({
+                    "item_id": row.question_id,
+                    "rating":  (0 if row.correct else 1),
+                })
+            data_questions = requests.post(f"{GET_URL}/api/recommendation/initial", json={"items": log_data_query})
+
+        else:
+            for row in log_data:
+                log_data_query.append({
+                    "user_id": row.google_id,
+                    "item_id": row.question_id,
+                    "rating":  (0 if row.correct else 1),
+                    "timestamp": int(row.created_at.timestamp())
+                })
+            data_questions = requests.post(f"{GET_URL}/api/recommendation/subsequent", json={"items": log_data_query})
+        
+        jsondata = data_questions.json()
+        if jsondata['status'] != "success":
+            raise HTTPException(status_code=500, detail="Recommendation AI error")
+        
+        result_data = []
+        idx = 0
+        for row in jsondata['recommended_items']:
+            result_data.append({
+                "question_id": row
             })
-        data_questions = requests.post(f"{GET_URL}/api/recommendation/subsequent", json={"items": log_data_query})
-    
-    jsondata = data_questions.json()
-    if jsondata['status'] != "success":
-        raise HTTPException(status_code=500, detail="Recommendation AI error")
-    
-    result_data = []
-    for row in jsondata['recommended_items']:
-        result_data.append({
-            "question_id": row
-        })
+            data_rec = models.RecommendationQuestionsDB(rec_id=data.rec_id, question_id=row, order=idx)
+            db.add(data_rec)
+            idx += 1
+        db.commit()
 
     return JSONResponse({"success": True,
                          "recommendation": result_data})

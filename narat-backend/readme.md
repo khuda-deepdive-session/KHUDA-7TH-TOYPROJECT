@@ -4,7 +4,7 @@
 
 1. postgresql 세팅
 2. dbmaker 실행
-3. question_data 실행
+3. initial_data 실행
 4. main 실행
 
 ### 파일 설명
@@ -14,7 +14,7 @@ src/
 ├── database.py                   # DB 연결
 ├── dbmanage.py                   # 세션별로 DB 불러오기
 ├── models.py                     # DB Table 정의
-├── question_data.py              # QuestionDB 초기화
+├── initial_data.py               # 초기 DB 내용 채우기
 ├── dbmaker.py                    # DB 세팅
 ├── responser/
 │   ├── route_auth.py             # /api/auth
@@ -30,6 +30,8 @@ src/
 | --- | --- | --- | --- | --- |
 | `/api/auth/google` | POST | Google 로그인 | `{ access_token(str) }` | `{ session_token(str), display_name(str), study_level(int) }` |
 | `/api/auth/verify` | POST | 세션 검증 | `{ session_token(str) }` | `{ is_valid(bool), display_name(str), study_level(int) }` |
+| `/api/auth/logout` | POST | 로그아웃 | `{ session_token(str) }` | `{ success(bool) }` |
+| `/api/auth/test_session_create` | POST | 테스트 세션 생성 | `{ access_token(str) }` | `{ is_valid(bool), display_name(str), study_level(int) }` |
 
 ### /api/questions
 | Endpoint | Method | Description | Request | Response |
@@ -40,7 +42,7 @@ src/
 ### /api/study
 | Endpoint | Method | Description | Request | Response |
 | --- | --- | --- | --- | --- |
-| `/api/study/submit` | POST | 답안 제출 | `{ session_token(str), question_id(int), answer(int: 1 is wrong, 0 is correct) }` | `{ success(bool), explanation(str) }` |
+| `/api/study/submit` | POST | 답안 제출 | `{ session_token(str), question_id(int), correct }` | `{ success(bool), explanation(str) }` |
 | `/api/study/history` | POST | 학습 이력 조회 | `{ session_token(str), limit(int) }` | `{ history[] }` |
 
 ### /api/recommendations
@@ -65,4 +67,5 @@ DB_PORT=5432
 
 GOOGLE_CLIENT_ID=[Your Google Client ID]
 GET_URL=[Host of Model-end / localhost:3001]
+TEST_SESSION_TOKEN=[Password of Getting Test Session]
 ```

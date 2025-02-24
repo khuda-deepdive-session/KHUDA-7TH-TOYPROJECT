@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import models
 from database import engine
+from uuid import uuid4
 
 def append_csv_to_table(db_url, table_name, csv_path):
     
@@ -68,7 +69,16 @@ def append_csv_to_table(db_url, table_name, csv_path):
     with engine.connect() as conn:
         after_count = conn.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar()
     conn.commit()
+    
+    # test@test.com 계정 생성
+    with engine.connect() as conn:
+        if conn.execute(text(f"SELECT google_id FROM users WHERE email='test@test.com'")).scalar() is None:
+            conn.execute(text(f"INSERT INTO users (google_id, email, display_name) VALUES ('{uuid4()}', 'test@test.com', '테스트')"))
+            conn.commit()
+    
+    conn.commit()
     print(f"전체 행 수: {after_count}")
+
     return True
         
 
@@ -92,3 +102,4 @@ if __name__ == "__main__":
         table_name='questions',
         csv_path='problem_database.csv'
     )
+
